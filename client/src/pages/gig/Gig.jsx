@@ -1,40 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "./Gig.scss";
 import { Slider } from "infinite-react-carousel/lib";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import newRequest from "../../../utils/newRequest";
 import Reviews from "../../components/reviews/Reviews";
-import { loadStripe } from '@stripe/stripe-js';
-
-const handlePayment = async (gigId) => {
-  const stripePromise = loadStripe('pk_test_key');
-  const stripe = await stripePromise;
-
-  try {
-    const response = await fetch(`http://localhost:8800/api/orders/create-payment-intent`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        gigId: gigId,  // Pass gigId or other necessary info
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create payment session');
-    }
-
-    const session = await response.json();
-    await stripe.redirectToCheckout({ sessionId: session.id });
-  } catch (error) {
-    console.error('Error during payment process:', error);
-  }
-};
-
-
-
 
 function Gig() {
   const { id } = useParams();
@@ -61,6 +31,18 @@ function Gig() {
       }),
     enabled: !!userId,
   });
+
+  // Load the Stripe script
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://js.stripe.com/v3/buy-button.js";
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   return (
     <div className="gig">
@@ -186,9 +168,12 @@ function Gig() {
                 </div>
               ))}
             </div>
-            
-            <button onClick={() => handlePayment(data._id)}>Continue</button>
-            
+
+            {/* Stripe Buy Button */}
+            <stripe-buy-button
+              buy-button-id="buy_btn_1QCC6RD3D0Ll4faSWfcJ6CaR"
+              publishable-key="pk_test_51Q825DD3D0Ll4faS0wQXzrOimokab6fo03QDiK5vTdMhek4fxMQCa1MyYiiffz2ulnxbTnk08R3HEiEylVxmyT2J00YpDyD0Ns"
+            ></stripe-buy-button>
           </div>
         </div>
       )}
